@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html>
+  <head>
+      <meta charset="UTF-8" />
+      <meta name="viewport" content="width=device-width, initial-scale=1" />
+      <title>GoToWeather</title>
+
+  </head>
+
+  <body>
+    <h1>Welcome to GoToWeather! Your #1 source for weather forecasts!</h1>
+    <p>{{.Number}}</p>
+    <p>{{.Text}}</p>
+    <form method="post" action="/city">
+      <input name="city" type="text"></input>
+      <button type="submit">Confirm</button>
+    </form>
+  </body>
+</html>

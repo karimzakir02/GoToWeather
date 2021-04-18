@@ -5,6 +5,9 @@ import(
   "html/template"
   "log"
   "fmt"
+  "github.com/PuerkitoBio/goquery"
+  "strings"
+  "strconv"
 )
 
 func main() {
@@ -37,14 +40,14 @@ func cityHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func getWeather(city string) int {
-  temperature = weatherChannel(city)
+  temperature := weatherChannel(city)
   return temperature
 }
 
 func weatherChannel(city string) int {
   const weatherLink string = "https://weather.com/weather/today/l/62e0efebee1ac0e8fa9b21fd17d57a6a0001753ab6be8a4874bb78bbb52eda02"
   resp, _ := http.Get(weatherLink)
-  doc, _ := goquery.NewDocumentFromReader(resp.body)
+  doc, _ := goquery.NewDocumentFromReader(resp.Body)
   var degrees int
   doc.Find("span").Each(func (i int, s *goquery.Selection) {
     class, _ := s.Attr("class")

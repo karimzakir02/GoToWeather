@@ -41,18 +41,103 @@ type resultData struct {
 }
 
 type weatherData struct {
-  temperature float32
-  highTemperature float32
-  lowTemperature float32
-  weatherCondition string
-  windSpeed float32
-  windDirection string
-  chanceRain int8
-  chanceSnow int8
-  humidity int8
-  visibility int16
-  sunrise string
-  sunset string
+  temperatureArray []float32
+  highTemperatureArray []float32
+  lowTemperatureArray []float32
+  weatherConditionArray []string
+  windSpeedArray []float32
+  windDirectionArray []string
+  chanceRainArray []int8
+  chanceSnowArray []int8
+  humidityArray []int8
+  visibilityArray []int16
+  sunriseArray []string
+  sunsetArray []string
+}
+
+func (w *weatherData) weatherChannel(link string) {
+  doc, _ := htmlquery.LoadURL(link)
+
+  var degrees int
+  temperatureNodes, _ := htmlquery.QueryAll(doc, "/html/body/div[1]/main/div[2]/main/div[1]/div/section/div/div[2]/div[1]/span")
+  temperatureNode := temperatureNodes[0]
+  degreesString := htmlquery.InnerText(temperatureNode)
+  degreesTrimmed := strings.Trim(degreesString, "°")
+  degrees, _ = strconv.Atoi(degreesTrimmed)
+  weather.temperatureArray[0] = float32(degrees)
+
+  var highDegrees int
+  highTemperatureNodes, _ := htmlquery.QueryAll(doc, "/html/body/div[1]/main/div[2]/main/div[5]/section/div[2]/div[1]/div[2]/span[1]")
+  highTemperatureNode := highTemperatureNodes[0]
+  highDegreesString := htmlquery.InnerText(highTemperatureNode)
+  highDegreesTrimmed := strings.Trim(highDegreesString, "°")
+  highDegrees, _ = strconv.Atoi(highDegreesTrimmed)
+  weather.highTemperatureArray[0] = float32(highDegrees)
+
+  var lowDegrees int
+  lowTemperatureNodes, _ := htmlquery.QueryAll(doc, "/html/body/div[1]/main/div[2]/main/div[5]/section/div[2]/div[1]/div[2]/span[2]")
+  lowTemperatureNode := lowTemperatureNodes[0]
+  lowDegreesString := htmlquery.InnerText(lowTemperatureNode)
+  lowDegreesTrimmed := strings.Trim(lowDegreesString, "°")
+  lowDegrees, _ = strconv.Atoi(lowDegreesTrimmed)
+  weather.lowTemperatureArray[0] = float32(lowDegrees)
+
+  var condition string
+  conditionNodes, _ := htmlquery.QueryAll(doc, "/html/body/div[1]/main/div[2]/main/div[1]/div/section/div/div[2]/div[1]/div")
+  conditionNode := conditionNodes[0]
+  condition = htmlquery.InnerText(conditionNode)
+  weather.weatherConditionArray[0] = condition
+
+  var windSpeed int
+  windSpeedNodes, _ := htmlquery.QueryAll(doc, "/html/body/div[1]/main/div[2]/main/div[5]/section/div[2]/div[2]/div[2]/span")
+  windSpeedNode := windSpeedNodes[0]
+  windSpeedString := htmlquery.InnerText(windSpeedNode)
+  windSpeedTrimmed := strings.Trim(windSpeedString, " mph")
+  windSpeedTrimmed2 := strings.Trim(windSpeedTrimmed, "Wind Direction")
+  windSpeed, _ = strconv.Atoi(windSpeedTrimmed2)
+  weather.windSpeedArray[0] = float32(windSpeed)
+  // var windDirection string
+  //
+  // var chanceRain int8
+  //
+  // var chanceSnow int8
+  //
+  var humidity int
+  humidityNodes, _ := htmlquery.QueryAll(doc, "/html/body/div[1]/main/div[2]/main/div[5]/section/div[2]/div[3]/div[2]/span")
+  humidityNode := humidityNodes[0]
+  humidityString := htmlquery.InnerText(humidityNode)
+  humidityTrimmed := strings.Trim(humidityString, "%")
+  humidity, _ = strconv.Atoi(humidityTrimmed)
+  weather.humidityArray[0] = int8(humidity)
+
+  var visibility int
+  visibilityNodes, _ := htmlquery.QueryAll(doc, "/html/body/div[1]/main/div[2]/main/div[5]/section/div[2]/div[7]/div[2]/span")
+  visibilityNode := visibilityNodes[0]
+  visibilityString := htmlquery.InnerText(visibilityNode)
+  visibilityTrimmed := strings.Trim(visibilityString, " mi")
+  visibility, _ = strconv.Atoi(visibilityTrimmed)
+  weather.visibility[0] = int16(visibility)
+
+  var sunrise string
+  sunriseNodes, _ := htmlquery.QueryAll(doc, "/html/body/div[1]/main/div[2]/main/div[5]/section/div[1]/div[2]/div/div/div/div[1]/p")
+  sunriseNode := sunriseNodes[0]
+  sunrise = htmlquery.InnerText(sunriseNode)
+  weather.sunrise[0] = sunrise
+
+  var sunset string
+  sunsetNodes, _ := htmlquery.QueryAll(doc, "/html/body/div[1]/main/div[2]/main/div[5]/section/div[1]/div[2]/div/div/div/div[2]/p")
+  sunsetNode := sunsetNodes[0]
+  sunset = htmlquery.InnerText(sunsetNode)
+  weather.sunset[0] = sunset
+}
+
+func (w weatherData) getResults(city string) resultData {
+  var result resultData
+
+  result.City = city
+  // ...
+
+  return result
 }
 
 func weatherHandler(w http.ResponseWriter, r *http.Request) {
@@ -77,100 +162,11 @@ func getWeather(city string) resultData {
       links = sublist
     }
   }
-  weather := weatherChannel(links[1])
-  var result resultData
-  result.City = city
-  result.Temperature = weather.temperature
-  result.HighTemperature = weather.highTemperature
-  result.LowTemperature = weather.lowTemperature
-  result.WeatherCondition = weather.weatherCondition
-  result.WindSpeed = weather.windSpeed
-  result.Humidity = weather.humidity
-  result.Visibility = weather.visibility
-  result.Sunrise = weather.sunrise
-  result.Sunset = weather.sunset
-  return result
-}
-
-func weatherChannel(link string) weatherData {
-  fmt.Println(link)
-  doc, _ := htmlquery.LoadURL(link)
   var weather weatherData
+  weather.weatherChannel(links[1])
+  // weather.accuWeather(links[2])
+  // weather.weatherBug(links[3])
 
-  var degrees int
-  temperatureNodes, _ := htmlquery.QueryAll(doc, "/html/body/div[1]/main/div[2]/main/div[1]/div/section/div/div[2]/div[1]/span")
-  temperatureNode := temperatureNodes[0]
-  degreesString := htmlquery.InnerText(temperatureNode)
-  degreesTrimmed := strings.Trim(degreesString, "°")
-  degrees, _ = strconv.Atoi(degreesTrimmed)
-  weather.temperature = float32(degrees)
-
-  var highDegrees int
-  highTemperatureNodes, _ := htmlquery.QueryAll(doc, "/html/body/div[1]/main/div[2]/main/div[5]/section/div[2]/div[1]/div[2]/span[1]")
-  highTemperatureNode := highTemperatureNodes[0]
-  highDegreesString := htmlquery.InnerText(highTemperatureNode)
-  highDegreesTrimmed := strings.Trim(highDegreesString, "°")
-  highDegrees, _ = strconv.Atoi(highDegreesTrimmed)
-  weather.highTemperature = float32(highDegrees)
-
-  var lowDegrees int
-  lowTemperatureNodes, _ := htmlquery.QueryAll(doc, "/html/body/div[1]/main/div[2]/main/div[5]/section/div[2]/div[1]/div[2]/span[2]")
-  lowTemperatureNode := lowTemperatureNodes[0]
-  lowDegreesString := htmlquery.InnerText(lowTemperatureNode)
-  lowDegreesTrimmed := strings.Trim(lowDegreesString, "°")
-  lowDegrees, _ = strconv.Atoi(lowDegreesTrimmed)
-  weather.lowTemperature = float32(lowDegrees)
-
-  var condition string
-  conditionNodes, _ := htmlquery.QueryAll(doc, "/html/body/div[1]/main/div[2]/main/div[1]/div/section/div/div[2]/div[1]/div")
-  conditionNode := conditionNodes[0]
-  condition = htmlquery.InnerText(conditionNode)
-  weather.weatherCondition = condition
-
-  var windSpeed int
-  windSpeedNodes, _ := htmlquery.QueryAll(doc, "/html/body/div[1]/main/div[2]/main/div[5]/section/div[2]/div[2]/div[2]/span")
-  windSpeedNode := windSpeedNodes[0]
-  windSpeedString := htmlquery.InnerText(windSpeedNode)
-  windSpeedTrimmed := strings.Trim(windSpeedString, " mph")
-  windSpeedTrimmed2 := strings.Trim(windSpeedTrimmed, "Wind Direction")
-  windSpeed, _ = strconv.Atoi(windSpeedTrimmed2)
-  weather.windSpeed = float32(windSpeed)
-
-  // var windDirection string
-  //
-  // var chanceRain int8
-  //
-  // var chanceSnow int8
-  //
-
-  var humidity int
-  humidityNodes, _ := htmlquery.QueryAll(doc, "/html/body/div[1]/main/div[2]/main/div[5]/section/div[2]/div[3]/div[2]/span")
-  humidityNode := humidityNodes[0]
-  humidityString := htmlquery.InnerText(humidityNode)
-  humidityTrimmed := strings.Trim(humidityString, "%")
-  humidity, _ = strconv.Atoi(humidityTrimmed)
-  weather.humidity = int8(humidity)
-
-  var visibility int
-  visibilityNodes, _ := htmlquery.QueryAll(doc, "/html/body/div[1]/main/div[2]/main/div[5]/section/div[2]/div[7]/div[2]/span")
-  visibilityNode := visibilityNodes[0]
-  visibilityString := htmlquery.InnerText(visibilityNode)
-  visibilityTrimmed := strings.Trim(visibilityString, " mi")
-  visibility, _ = strconv.Atoi(visibilityTrimmed)
-  weather.visibility = int16(visibility)
-
-
-  var sunrise string
-  sunriseNodes, _ := htmlquery.QueryAll(doc, "/html/body/div[1]/main/div[2]/main/div[5]/section/div[1]/div[2]/div/div/div/div[1]/p")
-  sunriseNode := sunriseNodes[0]
-  sunrise = htmlquery.InnerText(sunriseNode)
-  weather.sunrise = sunrise
-
-  var sunset string
-  sunsetNodes, _ := htmlquery.QueryAll(doc, "/html/body/div[1]/main/div[2]/main/div[5]/section/div[1]/div[2]/div/div/div/div[2]/p")
-  sunsetNode := sunsetNodes[0]
-  sunset = htmlquery.InnerText(sunsetNode)
-  weather.sunset = sunset
-
-  return weather
+  result := weather.getResults()
+  return result
 }

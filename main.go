@@ -132,6 +132,62 @@ func (w *weatherData) weatherChannel(link string) {
   w.sunsetArray = append(w.sunsetArray, sunset)
 }
 
+func (w *weatherData) bbcWeather(link string) {
+  doc, _ := htmlquery.LoadURL(link)
+
+  var degrees int
+  temperatureNodes, _ := htmlquery.QueryAll(doc, "//*[@id='wr-forecast']/div[4]/div/div[1]/div[2]/div/div/div/div[2]/ol/li[1]/button/div[1]/div[2]/div[3]/div[2]/div/div/div[2]/span/span[3]")
+  temperatureNode := temperatureNodes[0]
+  degreesString := htmlquery.InnerText(temperatureNode)
+  degreesTrimmed := strings.Trim(degreesString, "°")
+  degrees, _ = strconv.Atoi(degreesTrimmed)
+  w.temperatureArray = append(w.temperatureArray, float32(degrees))
+
+  var highDegrees int
+  highTemperatureNodes, _ := htmlquery.QueryAll(doc, "//*[@id='daylink-0']/div[4]/div[1]/div/div[4]/div/div[1]/span[2]/span/span[3]")
+  highTemperatureNode := highTemperatureNodes[0]
+  highDegreesString := htmlquery.InnerText(highTemperatureNode)
+  highDegreesTrimmed := strings.Trim(highDegreesString, "°")
+  highDegrees, _ = strconv.Atoi(highDegreesTrimmed)
+  w.highTemperatureArray = append(w.highTemperatureArray, float32(highDegrees))
+
+  var lowDegrees int
+  lowTemperatureNodes, _ := htmlquery.QueryAll(doc, "//*[@id='daylink-0']/div[4]/div[1]/div/div[4]/div/div[2]/span[2]/span/span[3]")
+  lowTemperatureNode := lowTemperatureNodes[0]
+  lowDegreesString := htmlquery.InnerText(lowTemperatureNode)
+  lowDegreesTrimmed := strings.Trim(lowDegreesString, "°")
+  lowDegrees, _ = strconv.Atoi(lowDegreesTrimmed)
+  w.lowTemperatureArray = append(w.lowTemperatureArray, float32(lowDegrees))
+
+  var condition string
+  conditionNodes, _ := htmlquery.QueryAll(doc, "//*[@id='daylink-0']/div[4]/div[2]/div")
+  conditionNode := conditionNodes[0]
+  condition = htmlquery.InnerText(conditionNode)
+  w.weatherConditionArray = append(w.weatherConditionArray, condition)
+
+  var humidity int
+  humidityNodes, _ := htmlquery.QueryAll(doc, "//*[@id='wr-forecast']/div[4]/div/div[1]/div[2]/div/div/div/div[2]/ol/li[1]/button/div[2]/div/div/div[1]/dl/dd[1]")
+  humidityNode := humidityNodes[0]
+  humidityString := htmlquery.InnerText(humidityNode)
+  humidityTrimmed := strings.Trim(humidityString, "%")
+  humidity, _ = strconv.Atoi(humidityTrimmed)
+  w.humidityArray = append(w.humidityArray, int8(humidity))
+
+  var sunrise string
+  sunriseNodes, _ := htmlquery.QueryAll(doc, "//*[@id='wr-forecast']/div[4]/div/div[1]/div[4]/div/div[1]/div[1]/span[1]/span[2]")
+  sunriseNode := sunriseNodes[0]
+  sunrise = htmlquery.InnerText(sunriseNode)
+  w.sunriseArray = append(w.sunriseArray, sunrise)
+
+  var sunset string
+  sunsetNodes, _ := htmlquery.QueryAll(doc, "//*[@id='wr-forecast']/div[4]/div/div[1]/div[4]/div/div[1]/div[1]/span[2]/span[2]")
+  sunsetNode := sunsetNodes[0]
+  sunset = htmlquery.InnerText(sunsetNode)
+  w.sunsetArray = append(w.sunsetArray, sunset)
+
+}
+
+
 func (w weatherData) getResults(city string) resultData {
   var result resultData
 
@@ -142,12 +198,12 @@ func (w weatherData) getResults(city string) resultData {
   result.WeatherCondition = mode(w.weatherConditionArray)
   result.WindSpeed = average(w.windSpeedArray)
 
-  var humidityTotal int8
+  var humidityTotal int16
   humidityTotal = 0
   for _, value := range w.humidityArray {
-    humidityTotal += value
+    humidityTotal += int16(value)
   }
-  humidityAverage := humidityTotal / int8(len(w.humidityArray))
+  humidityAverage := humidityTotal / int16(len(w.humidityArray))
   result.Humidity = int8(humidityAverage)
 
   var visibilityTotal int16
@@ -219,7 +275,7 @@ func getWeather(city string) resultData {
   }
   var weather weatherData
   weather.weatherChannel(links[1])
-  // weather.accuWeather(links[2])
+  weather.bbcWeather(links[2])
   // weather.weatherBug(links[3])
 
   result := weather.getResults(city)

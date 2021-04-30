@@ -187,6 +187,60 @@ func (w *weatherData) bbcWeather(link string) {
 
 }
 
+func (w *weatherData) timeAndDateWeather(link string) {
+  doc, _ := htmlquery.LoadURL(link)
+
+  // Need to convert from celsius to fahrenheit
+  var degrees int
+  temperatureNodes, _ := htmlquery.QueryAll(doc, "//*[@id='qlook']/div[2]")
+  temperatureNode := temperatureNodes[0]
+  degreesString := htmlquery.InnerText(temperatureNode)
+  degreesTrimmed := strings.Trim(degreesString, " °C")
+  degrees, _ = strconv.Atoi(degreesTrimmed)
+  w.temperatureArray = append(w.temperatureArray, float32(degrees))
+
+  forecastNodes, _ := htmlquery.QueryAll(doc, "//*[@id='qlook']/p[2]/span[1]")
+  forecastNode := forecastNodes[0]
+  forecastString := htmlquery.InnerText(forecastNode)
+  forecastTrimmed := strings.Trim(forecastString, "Forecast: ")
+  forecastTrimmed = strings.Trim(forecastTrimmed, " °C")
+
+  var highDegrees int
+  highDegreesString := forecastTrimmed[0:2]
+  highDegrees, _ = strconv.Atoi(highDegreesString)
+  w.highTemperatureArray = append(w.highTemperatureArray, float32(highDegrees))
+
+  var lowDegrees int
+  lowDegreesString := forecastTrimmed[len(forecastTrimmed)-4:len(forecastTrimmed)-2]
+  lowDegrees, _ = strconv.Atoi(lowDegreesString)
+  w.lowTemperatureArray = append(w.lowTemperatureArray, float32(lowDegrees))
+
+  var condition string
+  conditionNodes, _ := htmlquery.QueryAll(doc, "//*[@id='qlook']/p[1]")
+  conditionNode := conditionNodes[0]
+  condition = htmlquery.InnerText(conditionNode)
+  condition = strings.Trim(condition, ".")
+  w.weatherConditionArray = append(w.weatherConditionArray, condition)
+
+  var humidity int
+  humidityNodes, _ := htmlquery.QueryAll(doc, "/html/body/div[6]/main/article/section[1]/div[2]/table/tbody/tr[6]/td")
+  humidityNode := humidityNodes[0]
+  humidityString := htmlquery.InnerText(humidityNode)
+  humidityTrimmed := strings.Trim(humidityString, "%")
+  humidity, _ = strconv.Atoi(humidityTrimmed)
+  w.humidityArray = append(w.humidityArray, int8(humidity))
+
+  // Convert from miles to km
+  var visibility int
+  visibilityNodes, _ := htmlquery.QueryAll(doc, "/html/body/div[6]/main/article/section[1]/div[2]/table/tbody/tr[4]/td")
+  visibilityNode := visibilityNodes[0]
+  visibilityString := htmlquery.InnerText(visibilityNode)
+  visibilityTrimmed := strings.Trim(visibilityString, " km")
+  visibility, _ = strconv.Atoi(visibilityTrimmed)
+  w.visibilityArray = append(w.visibilityArray, int16(visibility))
+
+}
+
 
 func (w weatherData) getResults(city string) resultData {
   var result resultData
@@ -276,7 +330,7 @@ func getWeather(city string) resultData {
   var weather weatherData
   weather.weatherChannel(links[1])
   weather.bbcWeather(links[2])
-  // weather.weatherBug(links[3])
+  weather.timeAndDateWeather(links[3])
 
   result := weather.getResults(city)
   return result

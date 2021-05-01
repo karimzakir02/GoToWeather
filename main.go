@@ -22,6 +22,13 @@ func main() {
   http.ListenAndServe(":8000", nil)
 }
 
+func cleanUp() {
+  if r := recover(); r != nil {
+    fmt.Println("App Panicked: " r)
+  }
+  wg.Done()
+}
+
 func homeHandler(w http.ResponseWriter, r *http.Request) {
   p := resultData{}
   t, _ := template.ParseFiles("static/home.html")
@@ -60,7 +67,11 @@ type weatherData struct {
 }
 
 func (w *weatherData) weatherChannel(link string) {
-  doc, _ := htmlquery.LoadURL(link)
+  doc, err := htmlquery.LoadURL(link)
+
+  if err != nil {
+    panic("Could not connect to the source")
+  }
 
   var degrees int
   temperatureNodes, _ := htmlquery.QueryAll(doc, "//*[@id='WxuCurrentConditions-main-b3094163-ef75-4558-8d9a-e35e6b9b1034']/div/section/div/div[2]/div[1]/span")
@@ -137,7 +148,12 @@ func (w *weatherData) weatherChannel(link string) {
 }
 
 func (w *weatherData) bbcWeather(link string) {
-  doc, _ := htmlquery.LoadURL(link)
+
+  doc, err := htmlquery.LoadURL(link)
+  if err != nil {
+    panic("Could not connect to the source")
+  }
+
 
   var degrees int
   temperatureNodes, _ := htmlquery.QueryAll(doc, "//*[@id='wr-forecast']/div[4]/div/div[1]/div[2]/div/div/div/div[2]/ol/li[1]/button/div[1]/div[2]/div[3]/div[2]/div/div/div[2]/span/span[3]")
@@ -192,7 +208,11 @@ func (w *weatherData) bbcWeather(link string) {
 }
 
 func (w *weatherData) timeAndDateWeather(link string) {
-  doc, _ := htmlquery.LoadURL(link)
+  doc, err := htmlquery.LoadURL(link)
+
+  if err != nil {
+    panic("Could not connect to the source")
+  }
 
   // Need to convert from celsius to fahrenheit
   var degrees int
@@ -243,9 +263,7 @@ func (w *weatherData) timeAndDateWeather(link string) {
   visibility, _ = strconv.Atoi(visibilityTrimmed)
   w.visibilityArray = append(w.visibilityArray, int16(visibility))
 
-  wg.Done()
 }
-
 
 func (w weatherData) getResults(city string) resultData {
   var result resultData

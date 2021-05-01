@@ -5,7 +5,6 @@ import(
   "html/template"
   "log"
   // "fmt"
-  "sync"
   "github.com/antchfx/htmlquery"
   "strings"
   "strconv"
@@ -14,7 +13,6 @@ import(
   "sort"
 )
 
-var wg sync.WaitGroup
 
 func main() {
   http.HandleFunc("/", homeHandler)
@@ -133,7 +131,6 @@ func (w *weatherData) weatherChannel(link string) {
   sunsetNode := sunsetNodes[0]
   sunset = htmlquery.InnerText(sunsetNode)
   w.sunsetArray = append(w.sunsetArray, sunset)
-  wg.Done()
 }
 
 func (w *weatherData) bbcWeather(link string) {
@@ -188,7 +185,6 @@ func (w *weatherData) bbcWeather(link string) {
   sunsetNode := sunsetNodes[0]
   sunset = htmlquery.InnerText(sunsetNode)
   w.sunsetArray = append(w.sunsetArray, sunset)
-  wg.Done()
 }
 
 func (w *weatherData) timeAndDateWeather(link string) {
@@ -243,7 +239,6 @@ func (w *weatherData) timeAndDateWeather(link string) {
   visibility, _ = strconv.Atoi(visibilityTrimmed)
   w.visibilityArray = append(w.visibilityArray, int16(visibility))
 
-  wg.Done()
 }
 
 
@@ -334,13 +329,9 @@ func getWeather(city string) resultData {
   }
   var weather weatherData
 
-  wg.Add(1)
   weather.weatherChannel(links[1])
-  wg.Add(1)
   weather.bbcWeather(links[2])
-  wg.Add(1)
   weather.timeAndDateWeather(links[3])
-  wg.Wait()
 
   result := weather.getResults(city)
   return result

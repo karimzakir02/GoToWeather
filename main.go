@@ -4,7 +4,7 @@ import(
   "net/http"
   "html/template"
   "log"
-  // "fmt"
+  "fmt"
   "sync"
   "github.com/antchfx/htmlquery"
   "strings"
@@ -24,7 +24,7 @@ func main() {
 
 func cleanUp() {
   if r := recover(); r != nil {
-    fmt.Println("App Panicked: " r)
+    fmt.Println("App Panicked: ", r)
   }
   wg.Done()
 }

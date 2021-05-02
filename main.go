@@ -67,6 +67,7 @@ type weatherData struct {
 }
 
 func (w *weatherData) weatherChannel(link string) {
+  defer wg.Done()
   doc, err := htmlquery.LoadURL(link)
 
   if err != nil {
@@ -144,11 +145,10 @@ func (w *weatherData) weatherChannel(link string) {
   sunsetNode := sunsetNodes[0]
   sunset = htmlquery.InnerText(sunsetNode)
   w.sunsetArray = append(w.sunsetArray, sunset)
-  wg.Done()
 }
 
 func (w *weatherData) bbcWeather(link string) {
-
+  defer wg.Done()
   doc, err := htmlquery.LoadURL(link)
   if err != nil {
     panic("Could not connect to the source")
@@ -204,10 +204,10 @@ func (w *weatherData) bbcWeather(link string) {
   sunsetNode := sunsetNodes[0]
   sunset = htmlquery.InnerText(sunsetNode)
   w.sunsetArray = append(w.sunsetArray, sunset)
-  wg.Done()
 }
 
 func (w *weatherData) timeAndDateWeather(link string) {
+  defer wg.Done()
   doc, err := htmlquery.LoadURL(link)
 
   if err != nil {
@@ -262,7 +262,6 @@ func (w *weatherData) timeAndDateWeather(link string) {
   visibilityTrimmed := strings.Trim(visibilityString, " km")
   visibility, _ = strconv.Atoi(visibilityTrimmed)
   w.visibilityArray = append(w.visibilityArray, int16(visibility))
-
 }
 
 func (w weatherData) getResults(city string) resultData {

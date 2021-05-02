@@ -407,11 +407,11 @@ func getWeather(city string) resultData {
   var weather weatherData
 
   wg.Add(1)
-  weather.weatherChannel(links[1])
+  go weather.weatherChannel(links[1])
   wg.Add(1)
-  weather.bbcWeather(links[2])
+  go weather.bbcWeather(links[2])
   wg.Add(1)
-  weather.timeAndDateWeather(links[3])
+  go weather.timeAndDateWeather(links[3])
   wg.Wait()
 
   result := weather.getResults(city)

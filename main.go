@@ -22,7 +22,7 @@ func main() {
   http.ListenAndServe(":8000", nil)
 }
 
-func cleanUp() {
+func cleanup() {
   if r := recover(); r != nil {
     fmt.Println("App Panicked: ", r)
   }
@@ -74,77 +74,96 @@ func (w *weatherData) weatherChannel(link string) {
     panic("Could not connect to the source")
   }
 
-  var degrees int
   temperatureNodes, _ := htmlquery.QueryAll(doc, "//*[@id='WxuCurrentConditions-main-b3094163-ef75-4558-8d9a-e35e6b9b1034']/div/section/div/div[2]/div[1]/span")
-  temperatureNode := temperatureNodes[0]
-  degreesString := htmlquery.InnerText(temperatureNode)
-  degreesTrimmed := strings.Trim(degreesString, "°")
-  degrees, _ = strconv.Atoi(degreesTrimmed)
-  w.temperatureArray = append(w.temperatureArray, float32(degrees))
+  if len(temperatureNodes) > 0 {
+    temperatureNode := temperatureNodes[0]
+    degreesString := htmlquery.InnerText(temperatureNode)
+    degreesTrimmed := strings.Trim(degreesString, "°")
+    degrees, err := strconv.Atoi(degreesTrimmed)
+    if err == nil {
+      w.temperatureArray = append(w.temperatureArray, float32(degrees))
+    }
+  }
 
-  var highDegrees int
   highTemperatureNodes, _ := htmlquery.QueryAll(doc, "//*[@id='todayDetails']/section/div[2]/div[1]/div[2]/span[1]")
-  highTemperatureNode := highTemperatureNodes[0]
-  highDegreesString := htmlquery.InnerText(highTemperatureNode)
-  highDegreesTrimmed := strings.Trim(highDegreesString, "°")
-  highDegrees, _ = strconv.Atoi(highDegreesTrimmed)
-  w.highTemperatureArray = append(w.highTemperatureArray, float32(highDegrees))
+  if len(highTemperatureNodes) > 0 {
+    highTemperatureNode := highTemperatureNodes[0]
+    highDegreesString := htmlquery.InnerText(highTemperatureNode)
+    highDegreesTrimmed := strings.Trim(highDegreesString, "°")
+    highDegrees, err := strconv.Atoi(highDegreesTrimmed)
+    if err == nil {
+      w.highTemperatureArray = append(w.highTemperatureArray, float32(highDegrees))
+    }
+  }
 
-  var lowDegrees int
   lowTemperatureNodes, _ := htmlquery.QueryAll(doc, "//*[@id='todayDetails']/section/div[2]/div[1]/div[2]/span[2]")
-  lowTemperatureNode := lowTemperatureNodes[0]
-  lowDegreesString := htmlquery.InnerText(lowTemperatureNode)
-  lowDegreesTrimmed := strings.Trim(lowDegreesString, "°")
-  lowDegrees, _ = strconv.Atoi(lowDegreesTrimmed)
-  w.lowTemperatureArray = append(w.lowTemperatureArray, float32(lowDegrees))
+  if len(lowTemperatureNodes) > 0 {
+    lowTemperatureNode := lowTemperatureNodes[0]
+    lowDegreesString := htmlquery.InnerText(lowTemperatureNode)
+    lowDegreesTrimmed := strings.Trim(lowDegreesString, "°")
+    lowDegrees, err := strconv.Atoi(lowDegreesTrimmed)
+    if err == nil {
+      w.lowTemperatureArray = append(w.lowTemperatureArray, float32(lowDegrees))
+    }
+  }
 
   var condition string
   conditionNodes, _ := htmlquery.QueryAll(doc, "//*[@id='WxuCurrentConditions-main-b3094163-ef75-4558-8d9a-e35e6b9b1034']/div/section/div/div[2]/div[1]/div")
-  conditionNode := conditionNodes[0]
-  condition = htmlquery.InnerText(conditionNode)
-  w.weatherConditionArray = append(w.weatherConditionArray, condition)
+  if len(conditionNodes) > 0 {
+    conditionNode := conditionNodes[0]
+    condition = htmlquery.InnerText(conditionNode)
+    w.weatherConditionArray = append(w.weatherConditionArray, condition)
+  }
 
-  var windSpeed int
-  windSpeedNodes, _ := htmlquery.QueryAll(doc, "//*[@id='todayDetails']/section/div[2]/div[2]/div[2]/span/text()")
-  windSpeedNode := windSpeedNodes[0]
-  windSpeedString := htmlquery.InnerText(windSpeedNode)
-  windSpeedTrimmed := strings.Trim(windSpeedString, " mph")
-  windSpeedTrimmed2 := strings.Trim(windSpeedTrimmed, "Wind Direction")
-  windSpeed, _ = strconv.Atoi(windSpeedTrimmed2)
-  w.windSpeedArray = append(w.windSpeedArray, float32(windSpeed))
-  // var windDirection string
-  //
-  // var chanceRain int8
-  //
-  // var chanceSnow int8
-  //
-  var humidity int
+  windSpeedNodes, _ := htmlquery.QueryAll(doc, "//*[@id='todayDetails']/section/div[2]/div[2]/div[2]/span")
+  if len(windSpeedNodes) > 0 {
+    windSpeedNode := windSpeedNodes[0]
+    windSpeedString := htmlquery.InnerText(windSpeedNode)
+    windSpeedTrimmed := strings.Trim(windSpeedString, " mph")
+    windSpeedTrimmed2 := strings.Trim(windSpeedTrimmed, "Wind Direction")
+    windSpeed, err := strconv.Atoi(windSpeedTrimmed2)
+    if err == nil {
+      w.windSpeedArray = append(w.windSpeedArray, float32(windSpeed))
+    }
+  }
+
   humidityNodes, _ := htmlquery.QueryAll(doc, "//*[@id='todayDetails']/section/div[2]/div[3]/div[2]/span")
-  humidityNode := humidityNodes[0]
-  humidityString := htmlquery.InnerText(humidityNode)
-  humidityTrimmed := strings.Trim(humidityString, "%")
-  humidity, _ = strconv.Atoi(humidityTrimmed)
-  w.humidityArray = append(w.humidityArray, int8(humidity))
+  if len(humidityNodes) > 0 {
+    humidityNode := humidityNodes[0]
+    humidityString := htmlquery.InnerText(humidityNode)
+    humidityTrimmed := strings.Trim(humidityString, "%")
+    humidity, err := strconv.Atoi(humidityTrimmed)
+    if err == nil {
+      w.humidityArray = append(w.humidityArray, int8(humidity))
+    }
+  }
 
-  var visibility int
   visibilityNodes, _ := htmlquery.QueryAll(doc, "//*[@id='todayDetails']/section/div[2]/div[7]/div[2]/span")
-  visibilityNode := visibilityNodes[0]
-  visibilityString := htmlquery.InnerText(visibilityNode)
-  visibilityTrimmed := strings.Trim(visibilityString, " mi")
-  visibility, _ = strconv.Atoi(visibilityTrimmed)
-  w.visibilityArray = append(w.visibilityArray, int16(visibility))
+  if len(visibilityNodes) > 0 {
+    visibilityNode := visibilityNodes[0]
+    visibilityString := htmlquery.InnerText(visibilityNode)
+    visibilityTrimmed := strings.Trim(visibilityString, " mi")
+    visibility, err := strconv.Atoi(visibilityTrimmed)
+    if err == nil {
+      w.visibilityArray = append(w.visibilityArray, int16(visibility))
+    }
+  }
 
   var sunrise string
   sunriseNodes, _ := htmlquery.QueryAll(doc, "//*[@id='SunriseSunsetContainer-fd88de85-7aa1-455f-832a-eacb037c140a']/div/div/div/div[1]/p")
-  sunriseNode := sunriseNodes[0]
-  sunrise = htmlquery.InnerText(sunriseNode)
-  w.sunriseArray = append(w.sunriseArray, sunrise)
+  if len(sunriseNodes) > 0 {
+    sunriseNode := sunriseNodes[0]
+    sunrise = htmlquery.InnerText(sunriseNode)
+    w.sunriseArray = append(w.sunriseArray, sunrise)
+  }
 
   var sunset string
   sunsetNodes, _ := htmlquery.QueryAll(doc, "//*[@id='SunriseSunsetContainer-fd88de85-7aa1-455f-832a-eacb037c140a']/div/div/div/div[2]/p")
-  sunsetNode := sunsetNodes[0]
-  sunset = htmlquery.InnerText(sunsetNode)
-  w.sunsetArray = append(w.sunsetArray, sunset)
+  if len(sunsetNodes) > 0 {
+    sunsetNode := sunsetNodes[0]
+    sunset = htmlquery.InnerText(sunsetNode)
+    w.sunsetArray = append(w.sunsetArray, sunset)
+  }
 }
 
 func (w *weatherData) bbcWeather(link string) {
@@ -154,56 +173,73 @@ func (w *weatherData) bbcWeather(link string) {
     panic("Could not connect to the source")
   }
 
-
-  var degrees int
   temperatureNodes, _ := htmlquery.QueryAll(doc, "//*[@id='wr-forecast']/div[4]/div/div[1]/div[2]/div/div/div/div[2]/ol/li[1]/button/div[1]/div[2]/div[3]/div[2]/div/div/div[2]/span/span[3]")
-  temperatureNode := temperatureNodes[0]
-  degreesString := htmlquery.InnerText(temperatureNode)
-  degreesTrimmed := strings.Trim(degreesString, "°")
-  degrees, _ = strconv.Atoi(degreesTrimmed)
-  w.temperatureArray = append(w.temperatureArray, float32(degrees))
+  if len(temperatureNodes) > 0 {
+    temperatureNode := temperatureNodes[0]
+    degreesString := htmlquery.InnerText(temperatureNode)
+    degreesTrimmed := strings.Trim(degreesString, "°")
+    degrees, err := strconv.Atoi(degreesTrimmed)
+    if err == nil {
+      w.temperatureArray = append(w.temperatureArray, float32(degrees))
+    }
+  }
 
-  var highDegrees int
   highTemperatureNodes, _ := htmlquery.QueryAll(doc, "//*[@id='daylink-0']/div[4]/div[1]/div/div[4]/div/div[1]/span[2]/span/span[3]")
-  highTemperatureNode := highTemperatureNodes[0]
-  highDegreesString := htmlquery.InnerText(highTemperatureNode)
-  highDegreesTrimmed := strings.Trim(highDegreesString, "°")
-  highDegrees, _ = strconv.Atoi(highDegreesTrimmed)
-  w.highTemperatureArray = append(w.highTemperatureArray, float32(highDegrees))
+  if len(highTemperatureNodes) > 0 {
+    highTemperatureNode := highTemperatureNodes[0]
+    highDegreesString := htmlquery.InnerText(highTemperatureNode)
+    highDegreesTrimmed := strings.Trim(highDegreesString, "°")
+    highDegrees, err := strconv.Atoi(highDegreesTrimmed)
+    if err == nil {
+      w.highTemperatureArray = append(w.highTemperatureArray, float32(highDegrees))
+    }
+  }
 
-  var lowDegrees int
   lowTemperatureNodes, _ := htmlquery.QueryAll(doc, "//*[@id='daylink-0']/div[4]/div[1]/div/div[4]/div/div[2]/span[2]/span/span[3]")
-  lowTemperatureNode := lowTemperatureNodes[0]
-  lowDegreesString := htmlquery.InnerText(lowTemperatureNode)
-  lowDegreesTrimmed := strings.Trim(lowDegreesString, "°")
-  lowDegrees, _ = strconv.Atoi(lowDegreesTrimmed)
-  w.lowTemperatureArray = append(w.lowTemperatureArray, float32(lowDegrees))
+  if len(lowTemperatureNodes) > 0 {
+    lowTemperatureNode := lowTemperatureNodes[0]
+    lowDegreesString := htmlquery.InnerText(lowTemperatureNode)
+    lowDegreesTrimmed := strings.Trim(lowDegreesString, "°")
+    lowDegrees, err := strconv.Atoi(lowDegreesTrimmed)
+    if err == nil {
+      w.lowTemperatureArray = append(w.lowTemperatureArray, float32(lowDegrees))
+    }
+  }
 
   var condition string
   conditionNodes, _ := htmlquery.QueryAll(doc, "//*[@id='daylink-0']/div[4]/div[2]/div")
-  conditionNode := conditionNodes[0]
-  condition = htmlquery.InnerText(conditionNode)
-  w.weatherConditionArray = append(w.weatherConditionArray, condition)
+  if len(conditionNodes) > 0 {
+    conditionNode := conditionNodes[0]
+    condition = htmlquery.InnerText(conditionNode)
+    w.weatherConditionArray = append(w.weatherConditionArray, condition)
+  }
 
-  var humidity int
   humidityNodes, _ := htmlquery.QueryAll(doc, "//*[@id='wr-forecast']/div[4]/div/div[1]/div[2]/div/div/div/div[2]/ol/li[1]/button/div[2]/div/div/div[1]/dl/dd[1]")
-  humidityNode := humidityNodes[0]
-  humidityString := htmlquery.InnerText(humidityNode)
-  humidityTrimmed := strings.Trim(humidityString, "%")
-  humidity, _ = strconv.Atoi(humidityTrimmed)
-  w.humidityArray = append(w.humidityArray, int8(humidity))
+  if len(humidityNodes) > 0 {
+    humidityNode := humidityNodes[0]
+    humidityString := htmlquery.InnerText(humidityNode)
+    humidityTrimmed := strings.Trim(humidityString, "%")
+    humidity, err := strconv.Atoi(humidityTrimmed)
+    if err == nil {
+      w.humidityArray = append(w.humidityArray, int8(humidity))
+    }
+  }
 
   var sunrise string
   sunriseNodes, _ := htmlquery.QueryAll(doc, "//*[@id='wr-forecast']/div[4]/div/div[1]/div[4]/div/div[1]/div[1]/span[1]/span[2]")
-  sunriseNode := sunriseNodes[0]
-  sunrise = htmlquery.InnerText(sunriseNode)
-  w.sunriseArray = append(w.sunriseArray, sunrise)
+  if len(sunriseNodes) > 0 {
+    sunriseNode := sunriseNodes[0]
+    sunrise = htmlquery.InnerText(sunriseNode)
+    w.sunriseArray = append(w.sunriseArray, sunrise)
+  }
 
   var sunset string
   sunsetNodes, _ := htmlquery.QueryAll(doc, "//*[@id='wr-forecast']/div[4]/div/div[1]/div[4]/div/div[1]/div[1]/span[2]/span[2]")
-  sunsetNode := sunsetNodes[0]
-  sunset = htmlquery.InnerText(sunsetNode)
-  w.sunsetArray = append(w.sunsetArray, sunset)
+  if len(sunsetNodes) > 0 {
+    sunsetNode := sunsetNodes[0]
+    sunset = htmlquery.InnerText(sunsetNode)
+    w.sunsetArray = append(w.sunsetArray, sunset)
+  }
 }
 
 func (w *weatherData) timeAndDateWeather(link string) {
@@ -214,14 +250,17 @@ func (w *weatherData) timeAndDateWeather(link string) {
     panic("Could not connect to the source")
   }
 
-  // Need to convert from celsius to fahrenheit
-  var degrees int
   temperatureNodes, _ := htmlquery.QueryAll(doc, "//*[@id='qlook']/div[2]")
-  temperatureNode := temperatureNodes[0]
-  degreesString := htmlquery.InnerText(temperatureNode)
-  degreesTrimmed := strings.Trim(degreesString, " °C")
-  degrees, _ = strconv.Atoi(degreesTrimmed)
-  w.temperatureArray = append(w.temperatureArray, float32(degrees))
+  if len(temperatureNodes) > 0 {
+    temperatureNode := temperatureNodes[0]
+    degreesString := htmlquery.InnerText(temperatureNode)
+    degreesTrimmed := strings.Trim(degreesString, " °C")
+    degrees, err := strconv.Atoi(degreesTrimmed)
+    if err == nil {
+      fahrDegrees := celsiusToFahr(float32(degrees))
+      w.temperatureArray = append(w.temperatureArray, fahrDegrees)
+    }
+  }
 
   forecastNodes, _ := htmlquery.QueryAll(doc, "//*[@id='qlook']/p[2]/span[1]")
   forecastNode := forecastNodes[0]
@@ -229,39 +268,51 @@ func (w *weatherData) timeAndDateWeather(link string) {
   forecastTrimmed := strings.Trim(forecastString, "Forecast: ")
   forecastTrimmed = strings.Trim(forecastTrimmed, " °C")
 
-  var highDegrees int
   highDegreesString := forecastTrimmed[0:2]
-  highDegrees, _ = strconv.Atoi(highDegreesString)
-  w.highTemperatureArray = append(w.highTemperatureArray, float32(highDegrees))
+  highDegrees, err := strconv.Atoi(highDegreesString)
+  if err == nil {
+    highDegreesFahr := celsiusToFahr(float32(highDegrees))
+    w.highTemperatureArray = append(w.highTemperatureArray, highDegreesFahr)
+  }
 
-  var lowDegrees int
   lowDegreesString := forecastTrimmed[len(forecastTrimmed)-4:len(forecastTrimmed)-2]
-  lowDegrees, _ = strconv.Atoi(lowDegreesString)
-  w.lowTemperatureArray = append(w.lowTemperatureArray, float32(lowDegrees))
+  lowDegrees, err := strconv.Atoi(lowDegreesString)
+  if err == nil {
+    lowDegreesFahr := celsiusToFahr(float32(lowDegrees))
+    w.lowTemperatureArray = append(w.lowTemperatureArray, lowDegreesFahr)
+  }
 
   var condition string
   conditionNodes, _ := htmlquery.QueryAll(doc, "//*[@id='qlook']/p[1]")
-  conditionNode := conditionNodes[0]
-  condition = htmlquery.InnerText(conditionNode)
-  condition = strings.Trim(condition, ".")
-  w.weatherConditionArray = append(w.weatherConditionArray, condition)
+  if len(conditionNodes) > 0 {
+    conditionNode := conditionNodes[0]
+    condition = htmlquery.InnerText(conditionNode)
+    condition = strings.Trim(condition, ".")
+    w.weatherConditionArray = append(w.weatherConditionArray, condition)
+  }
 
-  var humidity int
   humidityNodes, _ := htmlquery.QueryAll(doc, "/html/body/div[6]/main/article/section[1]/div[2]/table/tbody/tr[6]/td")
-  humidityNode := humidityNodes[0]
-  humidityString := htmlquery.InnerText(humidityNode)
-  humidityTrimmed := strings.Trim(humidityString, "%")
-  humidity, _ = strconv.Atoi(humidityTrimmed)
-  w.humidityArray = append(w.humidityArray, int8(humidity))
+  if len(humidityNodes) > 0 {
+    humidityNode := humidityNodes[0]
+    humidityString := htmlquery.InnerText(humidityNode)
+    humidityTrimmed := strings.Trim(humidityString, "%")
+    humidity, err := strconv.Atoi(humidityTrimmed)
+    if err == nil {
+      w.humidityArray = append(w.humidityArray, int8(humidity))
+    }
+  }
 
-  // Convert from miles to km
-  var visibility int
   visibilityNodes, _ := htmlquery.QueryAll(doc, "/html/body/div[6]/main/article/section[1]/div[2]/table/tbody/tr[4]/td")
-  visibilityNode := visibilityNodes[0]
-  visibilityString := htmlquery.InnerText(visibilityNode)
-  visibilityTrimmed := strings.Trim(visibilityString, " km")
-  visibility, _ = strconv.Atoi(visibilityTrimmed)
-  w.visibilityArray = append(w.visibilityArray, int16(visibility))
+  if len(visibilityNodes) > 0 {
+    visibilityNode := visibilityNodes[0]
+    visibilityString := htmlquery.InnerText(visibilityNode)
+    visibilityTrimmed := strings.Trim(visibilityString, " km")
+    visibility, err := strconv.Atoi(visibilityTrimmed)
+    if err == nil {
+      visibilityMi := float32(visibility) * float32(0.62137)
+      w.visibilityArray = append(w.visibilityArray, int16(visibilityMi))
+    }
+  }
 }
 
 func (w weatherData) getResults(city string) resultData {
@@ -325,6 +376,10 @@ func mode(array []string) string {
     }
   }
   return currentMax
+}
+
+func celsiusToFahr(celsius float32) float32 {
+  return float32(celsius*1.8 + 32)
 }
 
 func weatherHandler(w http.ResponseWriter, r *http.Request) {

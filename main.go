@@ -19,7 +19,7 @@ var wg sync.WaitGroup
 func main() {
   http.HandleFunc("/", homeHandler)
   http.HandleFunc("/weather", weatherHandler)
-  http.ListenAndServe(":8000", nil)
+  http.ListenAndServe("0.0.0.0:8000", nil)
 }
 
 func cleanup() {
@@ -31,7 +31,7 @@ func cleanup() {
 
 func homeHandler(w http.ResponseWriter, r *http.Request) {
   p := resultData{}
-  t, _ := template.ParseFiles("static/home.html")
+  t, _ := template.ParseFiles("./static/home.html")
   t.Execute(w, p)
 }
 
@@ -390,12 +390,12 @@ func weatherHandler(w http.ResponseWriter, r *http.Request) {
 
   city := r.Form.Get("city")
   p := getWeather(city)
-  t, _ := template.ParseFiles("static/weather_display.html")
+  t, _ := template.ParseFiles("./static/weather_display.html")
   t.Execute(w, p)
 }
 
 func getWeather(city string) resultData {
-  file, _ :=  os.Open("static/weather_links.csv");
+  file, _ :=  os.Open("./static/weather_links.csv");
   reader := csv.NewReader(file)
   records, _ := reader.ReadAll()
   var links []string
